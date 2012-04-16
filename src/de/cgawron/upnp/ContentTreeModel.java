@@ -26,7 +26,7 @@ import org.teleal.cling.support.model.DescMeta;
 import org.teleal.cling.support.model.container.Container;
 import org.teleal.cling.support.model.item.Item;
 
-class ServerTreeModel extends TreeModelSupport implements TreeModel, RegistryListener
+class ContentTreeModel extends TreeModelSupport implements TreeModel, RegistryListener
 {
 	UpnpService upnpService;
 
@@ -324,11 +324,11 @@ class ServerTreeModel extends TreeModelSupport implements TreeModel, RegistryLis
 		}
 	}
 
-	Logger log = Logger.getLogger(ServerTreeModel.class.getName());
+	Logger log = Logger.getLogger(ContentTreeModel.class.getName());
 
 	RootNode root = new RootNode();
 
-	ServerTreeModel(UpnpService upnpService)
+	ContentTreeModel(UpnpService upnpService)
 	{
 		this.upnpService = upnpService;
 	}

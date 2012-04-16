@@ -1,6 +1,10 @@
 package de.cgawron.upnp;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+
 import javax.swing.JFrame;
+import javax.swing.JSplitPane;
 
 import org.teleal.cling.UpnpService;
 import org.teleal.cling.UpnpServiceImpl;
@@ -15,6 +19,9 @@ public class UPnPDemo implements Runnable
 {
 	RegistryListener listener;
 	static UpnpService upnpService;
+	private static JSplitPane splitPane;
+	private static ContentPanel contentPanel;
+	private static RendererPanel rendererPanel;
 
 	public UPnPDemo(RegistryListener listener)
 	{
@@ -26,14 +33,16 @@ public class UPnPDemo implements Runnable
 		upnpService = new UpnpServiceImpl();
 		JFrame main = new JFrame("UPnP Demo");
 		main.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		ServerTreeModel model = new ServerTreeModel(upnpService);
-		ServerPanel serverPanel = new ServerPanel(model);
-		main.getContentPane().add(serverPanel);
+		ContentTreeModel contentModel = new ContentTreeModel(upnpService);
+		contentPanel = new ContentPanel(contentModel);
+		rendererPanel = new RendererPanel();
+		rendererPanel.setPreferredSize(new Dimension(400, 400));
+		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, contentPanel, rendererPanel);
+		main.getContentPane().add(splitPane, BorderLayout.CENTER);
 		main.pack();
 		main.setVisible(true);
 
-		// Start a user thread that runs the UPnP stack
-		Thread clientThread = new Thread(new UPnPDemo(serverPanel.model));
+		Thread clientThread = new Thread(new UPnPDemo(contentModel));
 		clientThread.setDaemon(false);
 		clientThread.start();
 
