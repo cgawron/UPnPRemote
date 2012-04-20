@@ -5,13 +5,16 @@ import java.awt.Dimension;
 
 import javax.swing.JPanel;
 import javax.swing.JTree;
+import javax.swing.tree.TreeModel;
+
+import de.cgawron.upnp.tree.ContentTreeModel;
 
 class ContentPanel extends JPanel
 {
 	private static final long serialVersionUID = 1L;
 
 	JTree treeView;
-	ContentTreeModel model;
+	TreeModel model;
 
 	ContentPanel(ContentTreeModel model)
 	{

@@ -1,9 +1,5 @@
-package de.cgawron.upnp;
+package de.cgawron.upnp.tree;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.swing.event.TreeModelEvent;
@@ -13,10 +9,11 @@ import javax.swing.tree.TreePath;
 import org.teleal.cling.UpnpService;
 import org.teleal.cling.model.action.ActionInvocation;
 import org.teleal.cling.model.message.UpnpResponse;
-import org.teleal.cling.model.meta.DeviceIdentity;
+import org.teleal.cling.model.message.header.ServiceTypeHeader;
 import org.teleal.cling.model.meta.LocalDevice;
 import org.teleal.cling.model.meta.RemoteDevice;
 import org.teleal.cling.model.meta.RemoteService;
+import org.teleal.cling.model.types.ServiceType;
 import org.teleal.cling.registry.Registry;
 import org.teleal.cling.registry.RegistryListener;
 import org.teleal.cling.support.contentdirectory.callback.Browse;
@@ -26,7 +23,7 @@ import org.teleal.cling.support.model.DescMeta;
 import org.teleal.cling.support.model.container.Container;
 import org.teleal.cling.support.model.item.Item;
 
-class ContentTreeModel extends TreeModelSupport implements TreeModel, RegistryListener
+public class ContentTreeModel extends AbstractUPnPTreeModel implements TreeModel, RegistryListener, Runnable
 {
 	UpnpService upnpService;
 
@@ -82,167 +79,7 @@ class ContentTreeModel extends TreeModelSupport implements TreeModel, RegistryLi
 
 	}
 
-	private static final Object CONTENT_DIRECTORY = "ContentDirectory";
-
-	interface Node<ChildT extends Node<?>>
-	{
-		public void addChild(ChildT node);
-
-		public ChildT getChild(int index);
-
-		public int getChildCount();
-
-		Collection<ChildT> getChildren();
-
-		public boolean isLeaf();
-	}
-
-	class AbstractNode<ChildT extends Node<?>> implements Node<ChildT>
-	{
-		protected Vector<ChildT> children = new Vector<ChildT>();
-		protected TreePath path;
-
-		AbstractNode()
-		{
-			path = new TreePath(this);
-		}
-
-		AbstractNode(AbstractNode parent)
-		{
-			path = parent.path.pathByAddingChild(this);
-		}
-
-		@Override
-		public void addChild(ChildT child)
-		{
-			log.info("adding child " + child);
-			children.add(child);
-			int[] indices = new int[1];
-			Node[] newChildren = new Node[1];
-			newChildren[0] = child;
-			indices[0] = children.indexOf(child);
-			TreeModelEvent ev = new TreeModelEvent(this, path, indices, newChildren);
-			fireTreeNodesInserted(ev);
-		}
-
-		@Override
-		public ChildT getChild(int index)
-		{
-			return children.get(index);
-		}
-
-		@Override
-		public int getChildCount()
-		{
-			return children.size();
-		}
-
-		@Override
-		public Collection<ChildT> getChildren()
-		{
-			return children;
-		}
-
-		@Override
-		public boolean isLeaf()
-		{
-			log.info("isLeaf " + this + ": " + children);
-			return children.size() == 0;
-		}
-
-	}
-
-	/**
-	 * A {@code Node} with lazy initialization of children.
-	 * 
-	 * @author Christian Gawron
-	 * 
-	 * @param <ChildT>
-	 */
-	abstract class AbstractLazyNode<ChildT extends Node<?>> extends AbstractNode<ChildT>
-	{
-		AbstractLazyNode(AbstractNode parent)
-		{
-			super(parent);
-		}
-
-		abstract void initializeChildren();
-
-		@Override
-		public ChildT getChild(int index)
-		{
-			initializeChildren();
-			return super.getChild(index);
-		}
-
-		@Override
-		public int getChildCount()
-		{
-			initializeChildren();
-			return super.getChildCount();
-		}
-
-		@Override
-		public Collection<ChildT> getChildren()
-		{
-			initializeChildren();
-			return super.getChildren();
-		}
-
-		@Override
-		public boolean isLeaf()
-		{
-			initializeChildren();
-			return super.isLeaf();
-		}
-
-	}
-
-	class DeviceNode extends AbstractNode<ServiceNode> implements Node<ServiceNode>
-	{
-		RemoteDevice device;
-
-		public DeviceNode(RootNode parent, RemoteDevice device)
-		{
-			super(parent);
-			this.device = device;
-
-			RemoteService[] services = device.getServices();
-			for (RemoteService service : services) {
-				children.add(new ServiceNode(this, service));
-			}
-		}
-
-		@Override
-		public String toString()
-		{
-			return device.getDisplayString();
-		}
-
-	}
-
-	class RootNode extends AbstractNode<DeviceNode> implements Node<DeviceNode>
-	{
-		Map<DeviceIdentity, DeviceNode> topLevelNodes = new HashMap<DeviceIdentity, DeviceNode>();
-
-		RootNode()
-		{
-		}
-
-		@Override
-		public void addChild(DeviceNode child)
-		{
-			topLevelNodes.put(child.device.getIdentity(), child);
-			super.addChild(child);
-		}
-
-		@Override
-		public String toString()
-		{
-			return "RootNode []";
-		}
-
-	}
+	static final Object CONTENT_DIRECTORY = "ContentDirectory";
 
 	class ContentDirectoryNode extends AbstractLazyNode implements Node
 	{
@@ -302,35 +139,17 @@ class ContentTreeModel extends TreeModelSupport implements TreeModel, RegistryLi
 		}
 	}
 
-	class ServiceNode extends AbstractNode implements Node
-	{
-		RemoteService service;
-
-		public ServiceNode(DeviceNode parent, RemoteService service)
-		{
-			super(parent);
-			this.service = service;
-
-			if (service.getServiceId().getId().equals(CONTENT_DIRECTORY))
-			{
-				children.add(new ContentDirectoryNode(this, service));
-			}
-		}
-
-		@Override
-		public String toString()
-		{
-			return service.getServiceId().getId();
-		}
-	}
-
 	Logger log = Logger.getLogger(ContentTreeModel.class.getName());
 
-	RootNode root = new RootNode();
+	RootNode root = new RootNode(this);
 
-	ContentTreeModel(UpnpService upnpService)
+	public ContentTreeModel(UpnpService upnpService)
 	{
 		this.upnpService = upnpService;
+
+		Thread clientThread = new Thread(this);
+		clientThread.setDaemon(false);
+		clientThread.start();
 	}
 
 	@Override
@@ -433,4 +252,20 @@ class ContentTreeModel extends TreeModelSupport implements TreeModel, RegistryLi
 
 	}
 
+	@Override
+	public void run()
+	{
+		try {
+
+			// Add a listener for device registration events
+			upnpService.getRegistry().addListener(this);
+
+			// Broadcast a search message for all devices
+			ServiceType serviceType = ServiceType.valueOf("urn:schemas-upnp-org:service:ContentDirectory:1");
+			upnpService.getControlPoint().search(new ServiceTypeHeader(serviceType));
+		} catch (Exception ex) {
+			System.err.println("Exception occured: " + ex);
+			System.exit(1);
+		}
+	}
 }
