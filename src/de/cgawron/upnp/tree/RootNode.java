@@ -3,11 +3,11 @@ package de.cgawron.upnp.tree;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.teleal.cling.model.meta.DeviceIdentity;
+import org.teleal.cling.model.types.DeviceType;
 
-class RootNode extends AbstractNode<Void, DeviceNode> implements Node<DeviceNode>
+class RootNode extends AbstractNode<Void, DeviceTypeNode> implements Node<DeviceTypeNode>
 {
-	Map<DeviceIdentity, DeviceNode> topLevelNodes = new HashMap<DeviceIdentity, DeviceNode>();
+	Map<DeviceType, DeviceTypeNode> topLevelNodes = new HashMap<DeviceType, DeviceTypeNode>();
 
 	RootNode(AbstractUPnPTreeModel treeModel)
 	{
@@ -15,9 +15,9 @@ class RootNode extends AbstractNode<Void, DeviceNode> implements Node<DeviceNode
 	}
 
 	@Override
-	public void addChild(DeviceNode child)
+	public void addChild(DeviceTypeNode child)
 	{
-		topLevelNodes.put(child.object.getIdentity(), child);
+		topLevelNodes.put(child.object, child);
 		super.addChild(child);
 	}
 
@@ -25,6 +25,19 @@ class RootNode extends AbstractNode<Void, DeviceNode> implements Node<DeviceNode
 	public String toString()
 	{
 		return "RootNode []";
+	}
+
+	public DeviceTypeNode getChild(DeviceType type)
+	{
+		DeviceTypeNode node;
+		if (topLevelNodes.containsKey(type)) {
+			node = topLevelNodes.get(type);
+		}
+		else {
+			node = new DeviceTypeNode(this, type);
+			addChild(node);
+		}
+		return node;
 	}
 
 }

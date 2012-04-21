@@ -11,6 +11,7 @@ import java.util.Collection;
  */
 abstract class AbstractLazyNode<T, ChildT extends Node<?>> extends AbstractNode<T, ChildT>
 {
+	@SuppressWarnings("rawtypes")
 	AbstractLazyNode(AbstractNode parent)
 	{
 		super(parent);

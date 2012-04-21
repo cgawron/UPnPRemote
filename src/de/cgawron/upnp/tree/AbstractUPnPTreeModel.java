@@ -5,16 +5,29 @@ import java.util.logging.Logger;
 
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
 
+import org.teleal.cling.model.meta.LocalDevice;
+import org.teleal.cling.model.meta.RemoteDevice;
 import org.teleal.cling.model.meta.RemoteService;
+import org.teleal.cling.registry.Registry;
+import org.teleal.cling.registry.RegistryListener;
 
-public class AbstractUPnPTreeModel
+public class AbstractUPnPTreeModel implements TreeModel, RegistryListener
 {
-	Logger log = Logger.getLogger(DeviceTreeModel.class.getName());
+	public AbstractUPnPTreeModel()
+	{
+		root = new RootNode(this);
+	}
+
+	Logger log = Logger.getLogger(AbstractUPnPTreeModel.class.getName());
 
 	private final Vector<TreeModelListener> listeners = new Vector<TreeModelListener>();
 
-	public void initializeChildren(AbstractNode<?, ? extends Node<?>> node)
+	protected AbstractNode root;
+
+	void initializeChildren(AbstractNode<?, ? extends Node<?>> node)
 	{
 		if (node.object.getClass() == Void.class) {
 			// Do nothing
@@ -28,6 +41,7 @@ public class AbstractUPnPTreeModel
 		}
 	}
 
+	@Override
 	public void addTreeModelListener(TreeModelListener listener)
 	{
 		if (listener != null && !listeners.contains(listener)) {
@@ -35,6 +49,7 @@ public class AbstractUPnPTreeModel
 		}
 	}
 
+	@Override
 	public void removeTreeModelListener(TreeModelListener listener)
 	{
 		if (listener != null) {
@@ -72,5 +87,107 @@ public class AbstractUPnPTreeModel
 		{
 			listener.treeStructureChanged(e);
 		}
+	}
+
+	@Override
+	public void afterShutdown()
+	{
+		log.info("Shutdown of registry complete!");
+
+	}
+
+	@Override
+	public void beforeShutdown(Registry registry)
+	{
+		log.info("Before shutdown, the registry has devices: " + registry.getDevices().size());
+	}
+
+	@Override
+	public void localDeviceAdded(Registry registry, LocalDevice device)
+	{
+		log.info("Local device added: " + device.getDisplayString());
+	}
+
+	@Override
+	public void localDeviceRemoved(Registry registry, LocalDevice device)
+	{
+		log.info("Local device removed: " + device.getDisplayString());
+	}
+
+	@Override
+	public void remoteDeviceAdded(Registry registry, RemoteDevice device)
+	{
+		log.info("Remote device available: " + device.getDisplayString());
+		log.info("Device details: " + device.getIdentity().toString());
+
+		((RootNode) root).getChild(device.getType()).addChild(new DeviceNode(root, device));
+	}
+
+	@Override
+	public void remoteDeviceDiscoveryFailed(Registry registry, RemoteDevice device, Exception ex)
+	{
+		log.info("Discovery failed: " + device.getDisplayString() + " => " + ex);
+	}
+
+	@Override
+	public void remoteDeviceDiscoveryStarted(Registry registry, RemoteDevice device)
+	{
+		log.info("Discovery started: " + device.getDisplayString());
+	}
+
+	@Override
+	public void remoteDeviceRemoved(Registry registry, RemoteDevice device)
+	{
+		log.info("Remote device removed: " + device.getDisplayString());
+	}
+
+	@Override
+	public void remoteDeviceUpdated(Registry registry, RemoteDevice device)
+	{
+		log.info("Remote device updated: " + device.getDisplayString());
+	}
+
+	@Override
+	public Node<?> getChild(Object _parent, int index)
+	{
+		Node<?> parent = (Node<?>) _parent;
+		return parent.getChild(index);
+	}
+
+	@Override
+	public int getChildCount(Object _parent)
+	{
+		Node<?> parent = (Node<?>) _parent;
+		return parent.getChildCount();
+	}
+
+	@Override
+	public int getIndexOfChild(Object parent, Object child)
+	{
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	public Node getRoot()
+	{
+		return root;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	public boolean isLeaf(Object _node)
+	{
+		Node node = (Node) _node;
+
+		return node.isLeaf();
+	}
+
+	@Override
+	public void valueForPathChanged(TreePath path, Object newValue)
+	{
+		// TODO Auto-generated method stub
+
 	}
 }

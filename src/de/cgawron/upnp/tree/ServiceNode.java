@@ -2,30 +2,20 @@ package de.cgawron.upnp.tree;
 
 import org.teleal.cling.model.meta.RemoteService;
 
-class ServiceNode extends AbstractNode implements Node
+class ServiceNode extends AbstractNode<RemoteService, AbstractNode> implements Node<AbstractNode>
 {
-	RemoteService service;
 
 	public ServiceNode(DeviceNode parent, RemoteService service)
 	{
 		super(parent);
-		this.service = service;
+		this.object = service;
 
 		initializeChildren();
-	}
-
-	protected void initializeChildren()
-	{
-		/*
-		 * if
-		 * (service.getServiceId().getId().equals(ContentTreeModel.CONTENT_DIRECTORY
-		 * )) { children.add(new ContentDirectoryNode(this, service)); }
-		 */
 	}
 
 	@Override
 	public String toString()
 	{
-		return service.getServiceId().getId();
+		return object.getServiceId().getId();
 	}
 }

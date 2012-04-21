@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.TreeModel;
 
@@ -24,9 +25,9 @@ class ContentPanel extends JPanel
 		setLayout(new BorderLayout());
 		treeView = new JTree();
 		treeView.setShowsRootHandles(true);
-		add(treeView, BorderLayout.CENTER);
+		JScrollPane scrollPane = new JScrollPane(treeView);
+		add(scrollPane);
 
 		treeView.setModel(model);
 	}
-
 }

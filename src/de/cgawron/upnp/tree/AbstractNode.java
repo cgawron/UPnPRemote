@@ -6,6 +6,16 @@ import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.tree.TreePath;
 
+/**
+ * A node in the UPnP tree.
+ * 
+ * @author Christian Gawron
+ * 
+ * @param <T>
+ *            the "payload" class.
+ * @param <ChildT>
+ *            the type of the children.
+ */
 class AbstractNode<T, ChildT extends Node<?>> implements Node<ChildT>
 {
 	protected final AbstractUPnPTreeModel treeModel;
@@ -19,12 +29,21 @@ class AbstractNode<T, ChildT extends Node<?>> implements Node<ChildT>
 		path = new TreePath(this);
 	}
 
+	AbstractNode(AbstractUPnPTreeModel treeModel, T object)
+	{
+		this.treeModel = treeModel;
+		this.object = object;
+		path = new TreePath(this);
+	}
+
+	@SuppressWarnings("rawtypes")
 	AbstractNode(AbstractNode parent)
 	{
 		this.treeModel = parent.treeModel;
 		path = parent.path.pathByAddingChild(this);
 	}
 
+	@SuppressWarnings("rawtypes")
 	AbstractNode(AbstractNode parent, T object)
 	{
 		this.treeModel = parent.treeModel;
@@ -43,7 +62,8 @@ class AbstractNode<T, ChildT extends Node<?>> implements Node<ChildT>
 		this.treeModel.log.info("adding child " + child);
 		children.add(child);
 		int[] indices = new int[1];
-		Node[] newChildren = new Node[1];
+		@SuppressWarnings("unchecked")
+		ChildT[] newChildren = (ChildT[]) new Node[1];
 		newChildren[0] = child;
 		indices[0] = children.indexOf(child);
 		TreeModelEvent ev = new TreeModelEvent(this, path, indices, newChildren);

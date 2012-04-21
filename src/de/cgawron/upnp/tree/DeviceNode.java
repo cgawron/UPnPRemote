@@ -2,10 +2,11 @@ package de.cgawron.upnp.tree;
 
 import org.teleal.cling.model.meta.RemoteDevice;
 
-class DeviceNode extends AbstractNode<RemoteDevice, ServiceNode> implements Node<ServiceNode>
+@SuppressWarnings("rawtypes")
+class DeviceNode extends AbstractNode<RemoteDevice, AbstractNode> implements Node<AbstractNode>
 {
 
-	public DeviceNode(RootNode parent, RemoteDevice device)
+	public DeviceNode(AbstractNode parent, RemoteDevice device)
 	{
 		super(parent, device);
 
@@ -15,7 +16,7 @@ class DeviceNode extends AbstractNode<RemoteDevice, ServiceNode> implements Node
 	@Override
 	public String toString()
 	{
-		return object.getDisplayString();
+		return object.getDisplayString() + " [" + object.getType().getDisplayString() + "]";
 	}
 
 }
