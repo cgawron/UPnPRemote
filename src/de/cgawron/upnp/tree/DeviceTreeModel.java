@@ -3,7 +3,6 @@ package de.cgawron.upnp.tree;
 import org.teleal.cling.UpnpService;
 import org.teleal.cling.model.message.header.STAllHeader;
 import org.teleal.cling.model.meta.Action;
-import org.teleal.cling.model.meta.RemoteDevice;
 import org.teleal.cling.model.meta.RemoteService;
 import org.teleal.cling.model.meta.StateVariable;
 
@@ -93,14 +92,13 @@ public class DeviceTreeModel extends AbstractUPnPTreeModel implements Runnable
 				s.addChild(new ActionNode(s, action));
 			}
 		}
-		if (node instanceof DeviceNode) {
-			DeviceNode dn = (DeviceNode) node;
-			RemoteDevice device = dn.object;
-
-			for (RemoteDevice embedded : device.getEmbeddedDevices()) {
-				dn.addChild(new DeviceNode(dn, embedded));
-			}
-		}
+		/*
+		 * if (node instanceof DeviceNode) { DeviceNode dn = (DeviceNode) node;
+		 * RemoteDevice device = dn.object;
+		 * 
+		 * for (RemoteDevice embedded : device.getEmbeddedDevices()) {
+		 * dn.addChild(new DeviceNode(dn, embedded)); } }
+		 */
 		super.initializeChildren(node);
 	}
 

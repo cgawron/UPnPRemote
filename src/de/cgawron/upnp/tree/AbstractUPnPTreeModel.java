@@ -33,10 +33,27 @@ public class AbstractUPnPTreeModel implements TreeModel, RegistryListener
 			// Do nothing
 		}
 		else if (node instanceof DeviceNode) {
-			DeviceNode p = (DeviceNode) node;
-			RemoteService[] services = p.object.getServices();
+			DeviceNode dn = (DeviceNode) node;
+			RemoteDevice device = dn.object;
+
+			@SuppressWarnings("rawtypes")
+			GenericNode<GenericNode> attributesRoot = new GenericNode<GenericNode>(node, "Details");
+			GenericNode<DeviceNode> childDevicesRoot = new GenericNode<DeviceNode>(node, "Devices");
+			GenericNode<ServiceNode> servicesRoot = new GenericNode<ServiceNode>(node, "Services");
+			dn.children.add(attributesRoot);
+			dn.children.add(childDevicesRoot);
+			dn.children.add(servicesRoot);
+
+			attributesRoot.addChild(new GenericNode(attributesRoot, device.getIdentity().toString()));
+			attributesRoot.addChild(new GenericNode(attributesRoot, device.getDetails().getFriendlyName()));
+			attributesRoot.addChild(new GenericNode(attributesRoot, device.getDetails().getSerialNumber()));
+
+			RemoteService[] services = dn.object.getServices();
 			for (RemoteService service : services) {
-				p.children.add(new ServiceNode(p, service));
+				servicesRoot.children.add(new ServiceNode(dn, service));
+			}
+			for (RemoteDevice embedded : device.getEmbeddedDevices()) {
+				childDevicesRoot.addChild(new DeviceNode(dn, embedded));
 			}
 		}
 	}

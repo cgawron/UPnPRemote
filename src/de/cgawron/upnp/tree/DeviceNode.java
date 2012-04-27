@@ -3,7 +3,7 @@ package de.cgawron.upnp.tree;
 import org.teleal.cling.model.meta.RemoteDevice;
 
 @SuppressWarnings("rawtypes")
-class DeviceNode extends AbstractNode<RemoteDevice, AbstractNode> implements Node<AbstractNode>
+class DeviceNode extends AbstractNode<RemoteDevice, GenericNode> implements Node<GenericNode>
 {
 
 	public DeviceNode(AbstractNode parent, RemoteDevice device)

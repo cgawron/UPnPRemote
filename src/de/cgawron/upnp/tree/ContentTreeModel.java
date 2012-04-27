@@ -19,6 +19,7 @@ import org.teleal.cling.support.model.DIDLContent;
 import org.teleal.cling.support.model.DescMeta;
 import org.teleal.cling.support.model.container.Container;
 import org.teleal.cling.support.model.item.Item;
+import org.teleal.cling.support.model.item.MusicTrack;
 
 public class ContentTreeModel extends AbstractUPnPTreeModel implements Runnable
 {
@@ -79,6 +80,7 @@ public class ContentTreeModel extends AbstractUPnPTreeModel implements Runnable
 			return "id: " + containerId + ", name=" + name;
 		}
 	}
+
 	public class MyBrowse extends Browse
 	{
 		ContentDirectoryNode node;
@@ -94,6 +96,7 @@ public class ContentTreeModel extends AbstractUPnPTreeModel implements Runnable
 		{
 			log.severe("Broser failed: " + defaultMsg);
 			node.initialized = false;
+			throw new RuntimeException(invocation.getFailure());
 		}
 
 		@Override
@@ -101,9 +104,17 @@ public class ContentTreeModel extends AbstractUPnPTreeModel implements Runnable
 		{
 			for (Item item : content.getItems()) {
 				log.info("item " + item + ": " + item.getTitle());
+				if (item instanceof MusicTrack) {
+					node.addChild(new TrackNode(node, (MusicTrack) item));
+				}
+				else {
+					GenericNode itemNode = new GenericNode(node, item.getTitle());
+					node.addChild(itemNode);
+				}
 			}
 			for (DescMeta meta : content.getDescMetadata()) {
 				log.info("meta " + meta);
+				node.addChild(new GenericNode(node, meta.toString()));
 			}
 			for (Container c : content.getContainers()) {
 				log.info("container " + c + ": " + c.getTitle());
