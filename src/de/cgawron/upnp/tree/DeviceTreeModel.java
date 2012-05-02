@@ -1,5 +1,7 @@
 package de.cgawron.upnp.tree;
 
+import java.util.logging.Level;
+
 import org.teleal.cling.UpnpService;
 import org.teleal.cling.model.message.header.STAllHeader;
 import org.teleal.cling.model.meta.Action;
@@ -8,8 +10,6 @@ import org.teleal.cling.model.meta.StateVariable;
 
 public class DeviceTreeModel extends AbstractUPnPTreeModel implements Runnable
 {
-	UpnpService upnpService;
-
 	@SuppressWarnings("rawtypes")
 	class ActionNode extends AbstractNode<Action, Node> implements Node<Node>
 	{
@@ -56,7 +56,7 @@ public class DeviceTreeModel extends AbstractUPnPTreeModel implements Runnable
 
 	public DeviceTreeModel(UpnpService upnpService)
 	{
-		this.upnpService = upnpService;
+		super(upnpService);
 
 		Thread clientThread = new Thread(this);
 		clientThread.setDaemon(false);
@@ -67,15 +67,14 @@ public class DeviceTreeModel extends AbstractUPnPTreeModel implements Runnable
 	public void run()
 	{
 		try {
-
 			// Add a listener for device registration events
 			upnpService.getRegistry().addListener(this);
 
 			// Broadcast a search message for all devices
 			upnpService.getControlPoint().search(new STAllHeader());
 		} catch (Exception ex) {
-			System.err.println("Exception occured: " + ex);
-			System.exit(1);
+			log.log(Level.SEVERE, "an exception occured in the registry listener", ex);
+			throw new RuntimeException("an exception occured in the registry listener", ex);
 		}
 	}
 

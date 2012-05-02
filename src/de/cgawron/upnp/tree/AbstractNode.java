@@ -51,6 +51,11 @@ class AbstractNode<T, ChildT extends Node<?>> implements Node<ChildT>
 		path = parent.path.pathByAddingChild(this);
 	}
 
+	public T getObject()
+	{
+		return object;
+	}
+
 	void initializeChildren()
 	{
 		treeModel.initializeChildren(this);

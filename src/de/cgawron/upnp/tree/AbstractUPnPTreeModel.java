@@ -1,6 +1,7 @@
 package de.cgawron.upnp.tree;
 
 import java.util.Vector;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.event.TreeModelEvent;
@@ -8,6 +9,11 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import org.teleal.cling.UpnpService;
+import org.teleal.cling.controlpoint.ActionCallback;
+import org.teleal.cling.model.action.ActionInvocation;
+import org.teleal.cling.model.message.UpnpResponse;
+import org.teleal.cling.model.meta.Action;
 import org.teleal.cling.model.meta.LocalDevice;
 import org.teleal.cling.model.meta.RemoteDevice;
 import org.teleal.cling.model.meta.RemoteService;
@@ -16,16 +22,20 @@ import org.teleal.cling.registry.RegistryListener;
 
 public class AbstractUPnPTreeModel implements TreeModel, RegistryListener
 {
-	public AbstractUPnPTreeModel()
-	{
-		root = new RootNode(this);
-	}
+	UpnpService upnpService;
 
 	Logger log = Logger.getLogger(AbstractUPnPTreeModel.class.getName());
 
 	private final Vector<TreeModelListener> listeners = new Vector<TreeModelListener>();
 
+	@SuppressWarnings("rawtypes")
 	protected AbstractNode root;
+
+	public AbstractUPnPTreeModel(UpnpService upnpService)
+	{
+		this.upnpService = upnpService;
+		root = new RootNode(this);
+	}
 
 	void initializeChildren(AbstractNode<?, ? extends Node<?>> node)
 	{
@@ -55,6 +65,44 @@ public class AbstractUPnPTreeModel implements TreeModel, RegistryListener
 			for (RemoteDevice embedded : device.getEmbeddedDevices()) {
 				childDevicesRoot.addChild(new DeviceNode(dn, embedded));
 			}
+		}
+		else if (node instanceof ServiceNode) {
+			final ServiceNode s = (ServiceNode) node;
+			final GenericNode<GenericNode> details = new GenericNode<GenericNode>(node, "Details");
+			s.children.add(details);
+
+			for (Action<RemoteService> action : s.object.getActions())
+			{
+				details.children.add(new GenericNode(s, action.toString()));
+			}
+
+			if (s.object.getServiceId().getId().equals("ConnectionManager"))
+			{
+
+				Action<RemoteService> protocolInfo = s.object.getAction("GetProtocolInfo");
+				ActionInvocation<RemoteService> invocation = new ActionInvocation<RemoteService>(protocolInfo);
+				ActionCallback callback = new ActionCallback(invocation) {
+
+					@Override
+					public void success(ActionInvocation invocation)
+					{
+						// TODO
+						log.info(invocation.toString());
+						details.children.add(new GenericNode(s, invocation.getOutput()[0].toString()));
+						details.children.add(new GenericNode(s, invocation.getOutput()[1].toString()));
+					}
+
+					@Override
+					public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg)
+					{
+						log.log(Level.WARNING, "error in callback", invocation.getFailure());
+						details.children.add(new GenericNode(s, "error calling GetProtocolOnfo"));
+					}
+				};
+				upnpService.getControlPoint().execute(callback);
+				// details.children.add();
+			}
+
 		}
 	}
 
@@ -187,7 +235,7 @@ public class AbstractUPnPTreeModel implements TreeModel, RegistryListener
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Node getRoot()
+	public AbstractNode getRoot()
 	{
 		return root;
 	}

@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
 import org.teleal.cling.UpnpService;
@@ -20,9 +21,10 @@ public class UPnPDemo
 {
 	RegistryListener listener;
 	static UpnpService upnpService;
-	private static JSplitPane splitPane;
+
 	private static ContentPanel contentPanel;
 	private static RendererPanel rendererPanel;
+	private static JPanel controlPanel;
 
 	public UPnPDemo(RegistryListener listener)
 	{
@@ -35,11 +37,14 @@ public class UPnPDemo
 		JFrame main = new JFrame("UPnP Demo");
 		main.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		ContentTreeModel contentModel = new ContentTreeModel(upnpService);
+		DeviceTreeModel deviceModel = new DeviceTreeModel(upnpService);
 		contentPanel = new ContentPanel(contentModel);
-		rendererPanel = new RendererPanel(new DeviceTreeModel(upnpService));
+		rendererPanel = new RendererPanel(deviceModel);
 		rendererPanel.setPreferredSize(new Dimension(400, 400));
-		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, contentPanel, rendererPanel);
-		main.getContentPane().add(splitPane, BorderLayout.CENTER);
+		controlPanel = new ControlPanel(upnpService, deviceModel, contentModel);
+		JSplitPane splitPane1 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, contentPanel, rendererPanel);
+		JSplitPane splitPane2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPane1, controlPanel);
+		main.getContentPane().add(splitPane2, BorderLayout.CENTER);
 		main.pack();
 		main.setVisible(true);
 

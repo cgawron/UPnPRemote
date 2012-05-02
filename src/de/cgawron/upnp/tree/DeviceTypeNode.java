@@ -8,7 +8,7 @@ import org.teleal.cling.model.meta.DeviceIdentity;
 import org.teleal.cling.model.types.DeviceType;
 
 @SuppressWarnings("rawtypes")
-class DeviceTypeNode extends AbstractNode<DeviceType, DeviceNode> implements Node<DeviceNode>
+public class DeviceTypeNode extends AbstractNode<DeviceType, DeviceNode> implements Node<DeviceNode>
 {
 	Logger log = Logger.getLogger(DeviceTypeNode.class.getName());
 

@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.teleal.cling.model.types.DeviceType;
 
-class RootNode extends AbstractNode<Void, DeviceTypeNode> implements Node<DeviceTypeNode>
+public class RootNode extends AbstractNode<Void, DeviceTypeNode> implements Node<DeviceTypeNode>
 {
 	Map<DeviceType, DeviceTypeNode> topLevelNodes = new HashMap<DeviceType, DeviceTypeNode>();
 

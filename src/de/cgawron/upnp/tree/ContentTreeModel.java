@@ -1,5 +1,6 @@
 package de.cgawron.upnp.tree;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.event.TreeModelEvent;
@@ -146,20 +147,11 @@ public class ContentTreeModel extends AbstractUPnPTreeModel implements Runnable
 
 	final DeviceType MEDIA_SERVER = DeviceType.valueOf("urn:schemas-upnp-org:device:MediaServer:1");
 
-	UpnpService upnpService;
-
 	static final Object CONTENT_DIRECTORY = "ContentDirectory";
-
-	public ContentTreeModel()
-	{
-		super();
-		root = new DeviceTypeNode(this, MEDIA_SERVER);
-	}
 
 	public ContentTreeModel(UpnpService upnpService)
 	{
-		super();
-		this.upnpService = upnpService;
+		super(upnpService);
 		root = new DeviceTypeNode(this, MEDIA_SERVER);
 
 		Thread clientThread = new Thread(this);
@@ -170,14 +162,13 @@ public class ContentTreeModel extends AbstractUPnPTreeModel implements Runnable
 	@Override
 	void initializeChildren(AbstractNode<?, ? extends Node<?>> node)
 	{
+		super.initializeChildren(node);
 		if (node instanceof ServiceNode) {
 			ServiceNode s = (ServiceNode) node;
 			if (s.object.getServiceId().getId().equals(ContentTreeModel.CONTENT_DIRECTORY)) {
 				s.children.add(new ContentDirectoryNode(s, s.object));
 			}
 		}
-		else
-			super.initializeChildren(node);
 	}
 
 	@Override
@@ -204,8 +195,8 @@ public class ContentTreeModel extends AbstractUPnPTreeModel implements Runnable
 			ServiceType serviceType = ServiceType.valueOf("urn:schemas-upnp-org:service:ContentDirectory:1");
 			upnpService.getControlPoint().search(new ServiceTypeHeader(serviceType));
 		} catch (Exception ex) {
-			System.err.println("Exception occured: " + ex);
-			System.exit(1);
+			log.log(Level.SEVERE, "an exception occured in the registry listener", ex);
+			throw new RuntimeException("an exception occured in the registry listener", ex);
 		}
 	}
 }
