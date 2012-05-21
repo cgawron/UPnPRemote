@@ -38,6 +38,9 @@ import org.teleal.cling.model.meta.RemoteService;
 import org.teleal.cling.model.types.DeviceType;
 import org.teleal.cling.model.types.ServiceId;
 import org.teleal.cling.model.types.UnsignedIntegerFourBytes;
+import org.teleal.cling.support.contentdirectory.DIDLParser;
+import org.teleal.cling.support.model.DIDLContent;
+import org.teleal.cling.support.model.item.Item;
 import org.teleal.cling.support.renderingcontrol.lastchange.ChannelVolume;
 
 import de.cgawron.upnp.service.AVTransportProxy;
@@ -69,6 +72,15 @@ public class ControlPanel extends JPanel implements ItemListener, PropertyChange
 
 	private final JSlider volume;
 	private final JTextField avTransportURI;
+
+	private final JLabel transportStatus;
+
+	private final JButton btnPlay;
+
+	private final DIDLParser didlParser = new DIDLParser();
+	private final JLabel title;
+
+	private final ElapsedTime elapsedTime;
 
 	@SuppressWarnings("serial")
 	public class MyComboBoxModel extends AbstractListModel implements ComboBoxModel, TreeModelListener
@@ -239,7 +251,7 @@ public class ControlPanel extends JPanel implements ItemListener, PropertyChange
 		};
 		gridBagLayout.rowHeights = new int[]
 		{
-				0, 0, 0, 0
+				0, 0, 0, 0, 0, 0
 		};
 		gridBagLayout.columnWeights = new double[]
 		{
@@ -247,7 +259,7 @@ public class ControlPanel extends JPanel implements ItemListener, PropertyChange
 		};
 		gridBagLayout.rowWeights = new double[]
 		{
-				0.0, 0.0, 0.0, 0.0
+				0.0, 0.0, 0.0, 0.0, 1.0, 0.0
 		};
 		setLayout(gridBagLayout);
 
@@ -265,6 +277,13 @@ public class ControlPanel extends JPanel implements ItemListener, PropertyChange
 
 		volume = new JSlider();
 		volume.setMajorTickSpacing(10);
+		GridBagConstraints gbc_volume = new GridBagConstraints();
+		gbc_volume.insets = new Insets(0, 0, 5, 0);
+		gbc_volume.fill = GridBagConstraints.HORIZONTAL;
+		gbc_volume.gridwidth = 4;
+		gbc_volume.gridx = 0;
+		gbc_volume.gridy = 3;
+		add(volume, gbc_volume);
 		volume.addChangeListener(new ChangeListener() {
 
 			@Override
@@ -273,6 +292,15 @@ public class ControlPanel extends JPanel implements ItemListener, PropertyChange
 				renderingControl.setVolume(volume.getValue());
 			}
 		});
+
+		elapsedTime = new ElapsedTime();
+		GridBagConstraints gbc_elapsed = new GridBagConstraints();
+		gbc_elapsed.insets = new Insets(0, 0, 5, 0);
+		gbc_elapsed.fill = GridBagConstraints.HORIZONTAL;
+		gbc_elapsed.gridwidth = 4;
+		gbc_elapsed.gridx = 0;
+		gbc_elapsed.gridy = 4;
+		add(elapsedTime, gbc_elapsed);
 
 		avTransportURI = new JTextField();
 		avTransportURI.addActionListener(new ActionListener() {
@@ -286,7 +314,7 @@ public class ControlPanel extends JPanel implements ItemListener, PropertyChange
 		});
 		GridBagConstraints gbc_avTransportURI = new GridBagConstraints();
 		gbc_avTransportURI.gridwidth = 4;
-		gbc_avTransportURI.insets = new Insets(0, 0, 5, 5);
+		gbc_avTransportURI.insets = new Insets(0, 0, 5, 0);
 		gbc_avTransportURI.fill = GridBagConstraints.HORIZONTAL;
 		gbc_avTransportURI.gridx = 0;
 		gbc_avTransportURI.gridy = 1;
@@ -301,7 +329,7 @@ public class ControlPanel extends JPanel implements ItemListener, PropertyChange
 		gbc_btnPrevious.gridy = 2;
 		add(btnPrevious, gbc_btnPrevious);
 
-		JButton btnPlay = new JButton("Play");
+		btnPlay = new JButton("Play");
 		btnPlay.setAction(new ControlAction("Play"));
 		GridBagConstraints gbc_btnPlay = new GridBagConstraints();
 		gbc_btnPlay.insets = new Insets(0, 0, 5, 5);
@@ -324,12 +352,20 @@ public class ControlPanel extends JPanel implements ItemListener, PropertyChange
 		gbc_btnNext.gridx = 3;
 		gbc_btnNext.gridy = 2;
 		add(btnNext, gbc_btnNext);
-		GridBagConstraints gbc_volume = new GridBagConstraints();
-		gbc_volume.fill = GridBagConstraints.HORIZONTAL;
-		gbc_volume.gridwidth = 4;
-		gbc_volume.gridx = 0;
-		gbc_volume.gridy = 3;
-		add(volume, gbc_volume);
+
+		transportStatus = new JLabel("New label");
+		GridBagConstraints gbc_transportStatus = new GridBagConstraints();
+		gbc_transportStatus.insets = new Insets(0, 0, 0, 5);
+		gbc_transportStatus.gridx = 0;
+		gbc_transportStatus.gridy = 5;
+		add(transportStatus, gbc_transportStatus);
+
+		title = new JLabel("New label");
+		GridBagConstraints gbc_title = new GridBagConstraints();
+		gbc_title.insets = new Insets(0, 0, 0, 5);
+		gbc_title.gridx = 1;
+		gbc_title.gridy = 5;
+		add(title, gbc_title);
 	}
 
 	@Override
@@ -356,7 +392,35 @@ public class ControlPanel extends JPanel implements ItemListener, PropertyChange
 			volume.setValue(vol.getVolume());
 			break;
 		case "AVTransportURI":
-			avTransportURI.setText(event.getNewValue().toString());
+			Object value = event.getNewValue();
+			avTransportURI.setText(value != null ? value.toString() : "<null>");
+			break;
+		case "TransportState":
+			transportStatus.setText(event.getNewValue().toString());
+			if (event.getNewValue().toString().equals("PLAYING")) {
+				btnPlay.setAction(new ControlAction("Pause"));
+				elapsedTime.startPlaying();
+			}
+			else {
+				btnPlay.setAction(new ControlAction("Play"));
+				elapsedTime.stopPlaying();
+			}
+			break;
+		case "CurrentTrackMetaData":
+			String didl = event.getNewValue().toString();
+			try {
+				DIDLContent didlContent = didlParser.parse(didl);
+				for (Item item : didlContent.getItems()) {
+					log.info(item.getTitle());
+					title.setText(item.getTitle());
+				}
+			} catch (Exception e) {
+				throw new RuntimeException("error parsing '" + didl + "'", e);
+			}
+			break;
+		case "CurrentTrackDuration":
+			String duration = event.getNewValue().toString();
+			elapsedTime.setDuration(duration);
 			break;
 		default:
 			break;

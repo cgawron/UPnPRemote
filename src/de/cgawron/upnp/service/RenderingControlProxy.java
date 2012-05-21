@@ -19,10 +19,10 @@ public class RenderingControlProxy extends ServiceProxy
 
 	public RenderingControlProxy(UpnpService upnpService, RemoteDevice mediaRenderer)
 	{
-		super();
+		super(RenderingControlVariable.ALL);
 		this.upnpService = upnpService;
 		this.renderingControl = mediaRenderer.findService(ServiceId.valueOf("urn:upnp-org:serviceId:RenderingControl"));
-		this.callback = new MySubscriptionCallback(renderingControl, 600, RenderingControlVariable.ALL);
+		this.callback = new MySubscriptionCallback(renderingControl, 600);
 		upnpService.getControlPoint().execute(callback);
 	}
 

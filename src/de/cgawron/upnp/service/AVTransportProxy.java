@@ -19,10 +19,10 @@ public class AVTransportProxy extends ServiceProxy
 
 	public AVTransportProxy(UpnpService upnpService, RemoteDevice mediaRenderer)
 	{
-		super();
+		super(AVTransportVariable.ALL);
 		this.upnpService = upnpService;
 		this.avTransport = mediaRenderer.findService(ServiceId.valueOf("urn:upnp-org:serviceId:AVTransport"));
-		this.callback = new MySubscriptionCallback(avTransport, 600, AVTransportVariable.ALL);
+		this.callback = new MySubscriptionCallback(avTransport, 600);
 		upnpService.getControlPoint().execute(callback);
 	}
 

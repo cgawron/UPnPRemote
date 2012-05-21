@@ -2,6 +2,7 @@ package de.cgawron.upnp.service;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -14,28 +15,31 @@ import org.teleal.cling.model.gena.GENASubscription;
 import org.teleal.cling.model.message.UpnpResponse;
 import org.teleal.cling.model.meta.Service;
 import org.teleal.cling.model.state.StateVariableValue;
+import org.teleal.cling.model.types.UnsignedIntegerFourBytes;
+import org.teleal.cling.support.lastchange.Event;
 import org.teleal.cling.support.lastchange.EventedValue;
-import org.teleal.cling.support.lastchange.LastChange;
+import org.teleal.cling.support.lastchange.LastChangeParser;
 
 public class ServiceProxy
 {
-
 	protected UpnpService upnpService;
 	protected SubscriptionCallback callback;
 	protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-	protected LastChange lastChange;
+	// protected LastChange lastChange;
+	protected UnsignedIntegerFourBytes id = new UnsignedIntegerFourBytes(0);
+	protected LastChangeParser parser;
+	protected Set<Class<? extends EventedValue>> expectedValues;
+	protected Map<Class<? extends EventedValue>, EventedValue> values = new HashMap();
 
 	private static Logger logger = Logger.getLogger(ServiceProxy.class.getName());
 
 	class MySubscriptionCallback extends SubscriptionCallback
 	{
-		protected Set<Class<? extends EventedValue>> expectedValues;
 
-		protected MySubscriptionCallback(Service service, int requestedDurationSeconds, Set<Class<? extends EventedValue>> expectedValues)
+		protected MySubscriptionCallback(Service service, int requestedDurationSeconds)
 		{
 			super(service, requestedDurationSeconds);
-			this.expectedValues = expectedValues;
-			logger.info("Subscribing to " + service.toString());
+			logger.info("Subscribing to " + service);
 		}
 
 		@Override
@@ -64,16 +68,13 @@ public class ServiceProxy
 			try {
 				String lastChangeString = values.get("LastChange").toString();
 				log.info("lastChange: " + lastChangeString);
-				lastChange = new LastChange(new MyLastChangeParser(expectedValues), lastChangeString);
-				log.info(lastChange.toString());
+				Event event = parser.parse(lastChangeString);
 				for (Class<? extends EventedValue> vc : expectedValues) {
-					EventedValue v = lastChange.getEventedValue(0, vc);
-					if (v == null) {
-						log.info(vc.getName() + " not found");
-					}
-					else {
-						log.info(v.getName() + "=" + v.getValue());
-						pcs.firePropertyChange(v.getName(), null, v.getValue());
+					EventedValue newValue = event.getEventedValue(id, vc);
+					if (newValue != null) {
+						EventedValue oldValue = ServiceProxy.this.values.get(vc);
+						pcs.firePropertyChange(newValue.getName(), oldValue != null ? oldValue.getValue() : null, newValue.getValue());
+						ServiceProxy.this.values.put(vc, newValue);
 					}
 				}
 			} catch (Exception e) {
@@ -91,9 +92,11 @@ public class ServiceProxy
 
 	}
 
-	public ServiceProxy()
+	public ServiceProxy(Set<Class<? extends EventedValue>> expectedValues)
 	{
 		super();
+		this.expectedValues = expectedValues;
+		this.parser = new MyLastChangeParser(expectedValues);
 	}
 
 	public void addPropertyChangeListener(PropertyChangeListener listener)
