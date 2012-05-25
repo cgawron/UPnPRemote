@@ -1,4 +1,4 @@
-package de.cgawron.upnp;
+package de.cgawron.upnp.gui;
 
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -61,11 +61,11 @@ public class ControlPanel extends JPanel implements ItemListener, PropertyChange
 	// private final String url = TEST_URL;
 	private final DeviceTreeModel deviceModel;
 	private final ContentTreeModel contentModel;
-	private RemoteDevice renderer;
+	RemoteDevice renderer;
 	private final UpnpService upnpService;
 	private static Logger log = Logger.getLogger(ControlPanel.class.getName());
 
-	private final JComboBox rendererSelectable;
+	private final JComboBox<RemoteDevice> rendererSelectable;
 
 	private AVTransportProxy avTransport;
 	private RenderingControlProxy renderingControl;
@@ -259,7 +259,7 @@ public class ControlPanel extends JPanel implements ItemListener, PropertyChange
 		};
 		gridBagLayout.rowWeights = new double[]
 		{
-				0.0, 0.0, 0.0, 0.0, 1.0, 0.0
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 		};
 		setLayout(gridBagLayout);
 

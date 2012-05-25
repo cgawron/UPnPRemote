@@ -1,4 +1,4 @@
-package de.cgawron.upnp;
+package de.cgawron.upnp.gui;
 
 import java.awt.BorderLayout;
 import java.util.List;
@@ -14,14 +14,15 @@ import javax.swing.SwingWorker;
 public class ElapsedTime extends JComponent
 {
 	private final JLabel totalTimeLabel;
-	private final JProgressBar progressBar;
+	final JProgressBar progressBar;
 	private int totalTime;
-	private int elapsedTime;
-	private long started;
-	private boolean playing;
+	long elapsedTime;
+	long started;
+	boolean playing;
 	private Updater updater;
-	private static final Pattern durationPattern = Pattern.compile("(\\d\\d):(\\d\\d):(\\d\\d)");
+	private static final Pattern durationPattern = Pattern.compile("(\\d\\d):(\\d\\d):(\\d\\d)"); //$NON-NLS-1$
 	private static Logger logger = Logger.getLogger(ElapsedTime.class.getName());
+	private static final long serialVersionUID = 1L;
 
 	class Updater extends SwingWorker<Void, Long>
 	{
@@ -29,10 +30,11 @@ public class ElapsedTime extends JComponent
 		public Void doInBackground()
 		{
 			while (playing) {
-				publish(System.currentTimeMillis() - started);
+				publish(System.currentTimeMillis() - started + elapsedTime);
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException ignore) {
+					// ignore
 				}
 			}
 			return null;
@@ -69,8 +71,6 @@ public class ElapsedTime extends JComponent
 		return String.format("%d:%02d:%02d", hours, minutes, seconds);
 	}
 
-	private static final long serialVersionUID = 1L;
-
 	public void setDuration(String duration)
 	{
 		totalTime = parseDuration(duration);
@@ -89,11 +89,13 @@ public class ElapsedTime extends JComponent
 
 	public void stopPlaying()
 	{
-
+		playing = false;
+		elapsedTime += System.currentTimeMillis() - started;
 	}
 
 	public void reset()
 	{
+		playing = false;
 		elapsedTime = 0;
 	}
 

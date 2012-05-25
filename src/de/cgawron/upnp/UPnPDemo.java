@@ -11,6 +11,9 @@ import org.teleal.cling.UpnpService;
 import org.teleal.cling.UpnpServiceImpl;
 import org.teleal.cling.registry.RegistryListener;
 
+import de.cgawron.upnp.gui.ContentPanel;
+import de.cgawron.upnp.gui.ControlPanel;
+import de.cgawron.upnp.gui.RendererPanel;
 import de.cgawron.upnp.tree.ContentTreeModel;
 import de.cgawron.upnp.tree.DeviceTreeModel;
 

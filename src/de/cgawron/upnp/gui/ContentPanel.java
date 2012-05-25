@@ -1,4 +1,4 @@
-package de.cgawron.upnp;
+package de.cgawron.upnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -10,14 +10,14 @@ import javax.swing.tree.TreeModel;
 
 import de.cgawron.upnp.tree.ContentTreeModel;
 
-class ContentPanel extends JPanel
+public class ContentPanel extends JPanel
 {
 	private static final long serialVersionUID = 1L;
 
 	JTree treeView;
 	TreeModel model;
 
-	ContentPanel(ContentTreeModel model)
+	public ContentPanel(ContentTreeModel model)
 	{
 		super();
 		this.model = model;

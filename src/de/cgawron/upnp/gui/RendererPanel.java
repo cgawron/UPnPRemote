@@ -1,4 +1,4 @@
-package de.cgawron.upnp;
+package de.cgawron.upnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -15,7 +15,7 @@ public class RendererPanel extends JPanel
 	JTree treeView;
 	TreeModel model;
 
-	RendererPanel(TreeModel model)
+	public RendererPanel(TreeModel model)
 	{
 		super();
 		this.model = model;
